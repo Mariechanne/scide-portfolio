@@ -1,0 +1,38 @@
+﻿name: Collecte SIRI M1
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: collecte-siri-m1
+  cancel-in-progress: false
+
+jobs:
+  collecte:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: 04_projets/ilevia-ligne1-retards
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install requests
+
+      - run: python src/collecte_m1_siri.py
+
+      - name: Commit et push le CSV mis a jour
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/collecte/m1_rme1_siri.csv
+          git diff --staged --quiet || git commit -m "Collecte automatique SIRI M1/RME1"
+          git pull --rebase
+          git push
