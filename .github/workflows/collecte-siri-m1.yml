@@ -30,8 +30,8 @@ jobs:
 
       - name: Commit et push le CSV mis a jour
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "Mariechanne"
+          git config user.email "melvinamedetadji@gmail.com"
           git add data/collecte/m1_rme1_siri.csv
           git diff --staged --quiet || git commit -m "Collecte automatique SIRI M1/RME1"
           git pull --rebase
