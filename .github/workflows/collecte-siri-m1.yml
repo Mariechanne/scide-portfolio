@@ -26,13 +26,25 @@ jobs:
 
       - run: pip install requests
 
-      - run: python src/collecte_m1_siri.py
+      - name: Executer la collecte SIRI si le script est present
+        run: |
+          if [ -f src/collecte_m1_siri.py ]; then
+            python src/collecte_m1_siri.py
+          else
+            echo "Script src/collecte_m1_siri.py introuvable, collecte ignoree."
+          fi
 
       - name: Commit et push le CSV mis a jour
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/collecte/m1_rme1_siri.csv
-          git diff --staged --quiet || git commit -m "Collecte automatique SIRI M1/RME1"
-          git pull --rebase
-          git push
+          if [ -f data/collecte/m1_rme1_siri.csv ]; then
+            git add data/collecte/m1_rme1_siri.csv
+          else
+            echo "Fichier data/collecte/m1_rme1_siri.csv introuvable, aucun commit."
+          fi
+          if ! git diff --staged --quiet; then
+            git commit -m "Collecte automatique SIRI M1/RME1"
+            git pull --rebase
+            git push
+          fi
