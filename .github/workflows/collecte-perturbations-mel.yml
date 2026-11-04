@@ -1,0 +1,38 @@
+name: Collecte perturbations MEL
+
+on:
+  schedule:
+    - cron: '17 */3 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: collecte-perturbations-mel
+  cancel-in-progress: false
+
+jobs:
+  collecte:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: 04_projets/ilevia-ligne1-retards
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install requests
+
+      - run: python src/collecte_perturbations_mel.py
+
+      - name: Commit et push le CSV mis a jour
+        run: |
+          git config user.name "Mariechanne"
+          git config user.email "melvinamedetadji@gmail.com"
+          git add data/collecte/perturbations_mel.csv
+          git diff --staged --quiet || git commit -m "Collecte automatique perturbations MEL"
+          git pull --rebase
+          git push
