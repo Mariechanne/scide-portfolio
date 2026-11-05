@@ -3,6 +3,7 @@
 # =====================================================================
 # Interroge le service des perturbations une fois, et ajoute au CSV
 # uniquement les entrees nouvelles ou modifiees depuis le dernier passage.
+# On garde TOUTES les entrees (aucun filtre) : on trie a l'analyse.
 # Usage : python src/collecte_perturbations_mel.py
 # (a lancer depuis 04_projets/ilevia-ligne1-retards)
 
@@ -18,10 +19,11 @@ import requests
 URL = ("https://data.lillemetropole.fr/geoserver/ogc/features/v1/"
        "collections/dsp_ilevia:perturbations/items")
 CHEMIN_CSV = Path("data/collecte/perturbations_mel.csv")
-CIBLES_METRO = {"ILEVIA:LineRef::ME1:LOC", "ILEVIA:LineRef::ME2:LOC", "Global"}
 
-# Une entree est "deja vue" si ces trois valeurs existent deja dans le CSV
-CLE = ("identifiant_perturbation", "identifiant_message", "date_modification")
+# Une entree est "deja vue" si ces deux valeurs existent deja dans le CSV.
+# On n'utilise PAS identifiant_perturbation : constate le 05/11/2026,
+# il change d'une capture a l'autre pour une meme entree.
+CLE = ("identifiant_message", "date_modification")
 
 COLONNES = [
     "horodatage_collecte",   # quand CE script a interroge le flux (UTC)
@@ -44,11 +46,6 @@ def telecharger():
     reponse = requests.get(URL, params={"limit": 1000}, timeout=60)
     reponse.raise_for_status()
     return reponse.json()
-
-
-def a_garder(proprietes):
-    return (proprietes.get("type_perturbation") == "Perturbation"
-            or proprietes.get("cible") in CIBLES_METRO)
 
 
 def cle_de(proprietes):
@@ -76,8 +73,6 @@ if __name__ == "__main__":
     nouvelles = []
     for entree in donnees.get("features", []):
         p = entree["properties"]
-        if not a_garder(p):
-            continue
         cle = cle_de(p)
         if cle in vues:
             continue
